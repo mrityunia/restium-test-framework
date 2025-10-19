@@ -69,6 +69,80 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <!-- Maven Surefire Plugin: Runs tests sequentially or in parallel -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <includes>
+                        <include>**/RunCucumber*.java</include>
+                    </includes>
+                    <parallel>${parallel.mode}</parallel>
+                    <threadCount>${thread.count}</threadCount>
+                    <useUnlimitedThreads>false</useUnlimitedThreads>
+                    <reuseForks>true</reuseForks>
+                    <forkCount>1</forkCount>
+                </configuration>
+            </plugin>
 
+            <!-- Cucumber Reporting Plugin: Merge JSONs into enhanced HTML -->
+            <plugin>
+                <groupId>net.masterthought</groupId>
+                <artifactId>maven-cucumber-reporting</artifactId>
+                <version>5.7.7</version>
+                <executions>
+                    <execution>
+                        <id>generate-cucumber-html-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <projectName>Cucumber Test Report</projectName>
+                            <buildNumber>${project.version}</buildNumber>
+                            <outputDirectory>${project.build.directory}/cucumber-reports</outputDirectory>
+                            <jsonFiles>
+                                <param>${project.build.directory}/cucumber-reports/*.json</param>
+                            </jsonFiles>
+                            <checkBuildResult>false</checkBuildResult>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+        <!-- Profiles: Control sequential vs parallel execution -->
+        <profiles>
+            <profile>
+                <id>sequential</id>
+                <activation>
+                    <property>
+                        <name>mode</name>
+                        <value>sequential</value>
+                    </property>
+                </activation>
+                <properties>
+                    <parallel.mode>none</parallel.mode>
+                    <thread.count>1</thread.count>
+                </properties>
+            </profile>
+
+            <profile>
+                <id>parallel</id>
+                <activation>
+                    <property>
+                        <name>mode</name>
+                        <value>parallel</value>
+                    </property>
+                </activation>
+                <properties>
+                    <parallel.mode>classes</parallel.mode>
+                    <thread.count>${threads}</thread.count>
+                </properties>
+            </profile>
+        </profiles>
 
 </project>

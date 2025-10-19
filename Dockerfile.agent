@@ -1,0 +1,20 @@
+FROM jenkins/inbound-agent:latest
+
+USER root
+
+# Install Maven, Git, Firefox, wget, unzip
+RUN apt-get update && apt-get install -y \
+    maven \
+    git \
+    firefox-esr \
+    wget \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Geckodriver for Firefox
+RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz \
+    && tar -xvzf geckodriver-v0.34.0-linux64.tar.gz \
+    && mv geckodriver /usr/local/bin/ \
+    && rm geckodriver-v0.34.0-linux64.tar.gz
+
+USER jenkins

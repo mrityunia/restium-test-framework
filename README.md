@@ -177,3 +177,14 @@ mvn -f ./pom.xml verify
 
 ## License
 This project is provided as-is for demonstration/testing purposes.
+
+## docker sections 
+
+ - Docker compose up for jenkins service 
+`docker-compose -f docker-compose-jenkin.yml up`
+ - Docker compose down to down the jenkins service
+`docker-compose -f docker-compose-jenkin.yml down -v`
+
+## Docker install maven and other toolds run this which use the Docker.agent file and install all the toolds inside the docker
+`docker-compose -f docker-compose-jenkin.yml up -d --build`
+

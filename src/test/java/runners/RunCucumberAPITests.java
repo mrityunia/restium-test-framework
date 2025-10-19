@@ -9,7 +9,8 @@ import org.testng.annotations.DataProvider;
         glue = {
                 "steps.api",
                 "hooks"},
-        plugin = {"pretty", "json:target/cucumber-reports/cucumber.json", "html:target/cucumber-reports/cucumber.html"},
+        plugin = {"pretty", "json:target/cucumber-reports/cucumber.json",
+                            "html:target/cucumber-reports/cucumber.html"},
         monochrome = true
 )
 public class RunCucumberAPITests extends AbstractTestNGCucumberTests {

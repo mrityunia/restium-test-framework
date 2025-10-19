@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"   # Jenkins web UI
+      - "50000:50000" # For agent communication
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    restart: unless-stopped
+    networks:
+      - resting-bridge
+
+  jenkins-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: selenium-agent
+    environment:
+      JENKINS_URL: http://jenkins:8080
+      JENKINS_AGENT_NAME: selenium-agent
+      JENKINS_SECRET: f2a21010636f4704f81a18f82f7accb70e90eb6e93bd1c2de8366002bd0932d1
+    networks:
+      - resting-bridge
+    depends_on:
+      - jenkins   # must match the service name of Jenkins master
+
+volumes:
+  jenkins_home:
+
+networks:
+  resting-bridge:
+    driver: bridge
