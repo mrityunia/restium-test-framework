@@ -25,7 +25,7 @@ services:
     networks:
       - resting-bridge
     depends_on:
-      - jenkins   # must match the service name of Jenkins master
+      - jenkins
 
 volumes:
   jenkins_home:
