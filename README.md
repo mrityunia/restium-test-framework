@@ -120,9 +120,7 @@ mvn test -Dcucumber.filter.tags="@Smoke"
 ### Execution scenarios (tag-based filtering)
 - 3 API + 3 UI in parallel (together):
 ```bash
-mvn test -Pparallel -DthreadCount=4 \
-  -Dtest=RunCucumberUITests,RunCucumberAPITests \
-  -Dcucumber.filter.tags="(@ui and @google and @Sanity) or (@api and @posts)"
+mvn test -Pparallel -DthreadCount=4 -Dcucumber.filter.tags="(@ui and @google and @Sanity) or (@api and @posts)" 
 ```
 
 - Only UI in parallel:
