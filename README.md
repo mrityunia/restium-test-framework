@@ -1,6 +1,3 @@
-Perfect 👍 — your current README is already excellent in terms of technical depth, but a few sections need **grammar, clarity, and structure improvements** (especially the Docker/Jenkins parts and small redundancies).
-Here’s a **cleaned, corrected, and more descriptive version** — fully polished and ready for GitHub or internal documentation use.
-
 ---
 
 # 🚀 Automation Framework (UI + API)
