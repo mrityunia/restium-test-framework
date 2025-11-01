@@ -22,14 +22,17 @@ services:
       JENKINS_URL: http://jenkins:8080
       JENKINS_AGENT_NAME: selenium-agent
       JENKINS_SECRET: f2a21010636f4704f81a18f82f7accb70e90eb6e93bd1c2de8366002bd0932d1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # ✅ allows Docker commands from inside agent
     networks:
       - resting-bridge
     depends_on:
       - jenkins
+    user: root
 
 volumes:
   jenkins_home:
 
 networks:
   resting-bridge:
-    driver: bridge
+    external: true

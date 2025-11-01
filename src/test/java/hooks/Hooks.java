@@ -31,7 +31,8 @@ public class Hooks {
         }
     }
 
-    @After(value = "@ui", order = 0)
+   // @After(value = "@ui", order = 0)
+   @After()
     public void quitDriver() {
         logger.info("Quitting WebDriver");
         DriverManager.quitDriver();

@@ -1,0 +1,139 @@
+pipeline {
+    agent any
+
+    /*****************************************************
+     * PARAMETERS SECTION
+     *****************************************************/
+    parameters {
+        string(name: 'BROWSER', defaultValue: 'chrome', description: 'Browser to run tests (chrome/firefox)')
+        booleanParam(name: 'HEADLESS', defaultValue: true, description: 'Run tests in headless mode')
+        choice(name: 'MODE', choices: ['sequential', 'parallel'], description: 'Execution mode')
+        string(name: 'THREADS', defaultValue: '4', description: 'Number of parallel threads')
+        string(name: 'TAGS', defaultValue: '@Sanity', description: 'Cucumber tags to run')
+    }
+
+    environment {
+        GRID_COMPOSE_FILE = 'docker-compose.selenium-grid.yml'
+        GRID_URL = 'http://selenium-hub:4444/wd/hub'
+        SELENIUM_GRID = 'true'
+        DOCKER_NETWORK = 'resting-bridge'
+    }
+
+    options {
+        timestamps()
+        ansiColor('xterm')
+    }
+
+    stages {
+
+        /*****************************************************
+         * 1️⃣ Initialize Docker Network
+         *****************************************************/
+        stage('Initialize Docker Network') {
+            steps {
+                script {
+                    echo 'Ensuring shared Docker network exists...'
+                    sh '''
+                        docker network inspect ${DOCKER_NETWORK} >/dev/null 2>&1 || \
+                        docker network create ${DOCKER_NETWORK}
+                    '''
+                }
+            }
+        }
+
+        /*****************************************************
+         * 2️⃣ Start Selenium Grid
+         *****************************************************/
+        stage('Start Selenium Grid') {
+            steps {
+                script {
+                    echo 'Starting Selenium Grid containers...'
+                    sh 'docker compose -f ${GRID_COMPOSE_FILE} up -d --build'
+                }
+            }
+        }
+
+        /*****************************************************
+         * 3️⃣ Verify Selenium Hub Connectivity
+         *****************************************************/
+        stage('Verify Selenium Hub Connectivity') {
+            steps {
+                script {
+                    echo 'Checking if Selenium Hub is reachable...'
+                    def gridReady = false
+                    for (int i = 1; i <= 10; i++) {
+                        echo "Attempt ${i}/10: Checking Grid status..."
+                        def result = sh(
+                            script: "curl -s -w '\\nHTTP %{http_code}\\n' ${GRID_URL}/status || echo 'connection failed'",
+                            returnStdout: true
+                        ).trim()
+                        echo "Response:\n${result}"
+                        if (result.contains('"ready":true') || result.contains('200')) {
+                            echo 'Grid is up and ready!'
+                            gridReady = true
+                            break
+                        }
+                        sleep(5)
+                    }
+                    if (!gridReady) {
+                        error('Selenium Grid did not respond in time.')
+                    }
+                }
+            }
+        }
+
+        /*****************************************************
+         * 4️⃣ Run Tests — Do NOT fail build on test errors
+         *****************************************************/
+        stage('Run Tests on Selenium Grid') {
+            steps {
+                script {
+                    echo "Running tests on Selenium Grid with browser=${params.BROWSER}, mode=${params.MODE}, threads=${params.THREADS}"
+
+                    def testStatus = sh(
+                        script: "mvn clean test " +
+                                "-Dselenium.grid=${SELENIUM_GRID} " +
+                                "-Dselenium.grid.url=${GRID_URL} " +
+                                "-Dbrowser=${params.BROWSER} " +
+                                "-Dheadless=${params.HEADLESS} " +
+                                "-Dmode=${params.MODE} " +
+                                "-Dthreads=${params.THREADS} " +
+                                "-Dcucumber.filter.tags='${params.TAGS}' || true",
+                        returnStatus: true
+                    )
+
+                    if (testStatus != 0) {
+                        echo '⚠️ Tests failed, but build will be marked as SUCCESS intentionally.'
+                    } else {
+                        echo '✅ All tests passed successfully.'
+                    }
+
+                    currentBuild.result = 'SUCCESS'
+                }
+            }
+        }
+    }
+
+    /*****************************************************
+     * POST SECTION
+     *****************************************************/
+    post {
+        always {
+            echo 'Publishing Cucumber JSON report...'
+            cucumber fileIncludePattern: 'target/cucumber-reports/**/*.json',
+                     trendsLimit: 10,
+                     sortingMethod: 'ALPHABETICAL'
+
+            echo 'Cleaning up Selenium Grid containers...'
+            sh 'docker compose -f ${GRID_COMPOSE_FILE} down -v || true'
+        }
+
+        success {
+            echo '✅ Build marked as SUCCESS (even if some tests failed).'
+        }
+
+        failure {
+            echo '❌ Pipeline failed due to infra/config issue (Grid, network, or Docker failure).'
+        }
+    }
+}

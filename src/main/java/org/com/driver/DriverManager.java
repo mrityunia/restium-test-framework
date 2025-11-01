@@ -9,11 +9,16 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public final class DriverManager {
     private static final ThreadLocal<WebDriver> threadLocalDriver = new ThreadLocal<>();
 
-    private DriverManager() {}
+    private DriverManager() {
+    }
 
     public static WebDriver getDriver() {
         WebDriver driver = threadLocalDriver.get();
@@ -40,59 +45,70 @@ public final class DriverManager {
         }
     }
 
+    private static WebDriver createLocalDriver(String browser, boolean headless) {
+        switch (browser.toLowerCase()) {
+            case "chrome":
+                WebDriverManager.chromedriver().setup();
+                ChromeOptions chromeOptions = new ChromeOptions();
+                if (headless) {
+                    chromeOptions.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage");
+                }
+                chromeOptions.addArguments("--window-size=1920,1080");
+                return new ChromeDriver(chromeOptions);
+
+            case "firefox":
+                WebDriverManager.firefoxdriver().setup();
+                FirefoxOptions ffOptions = new FirefoxOptions();
+                if (headless) ffOptions.addArguments("-headless");
+                return new FirefoxDriver(ffOptions);
+
+            case "edge":
+                WebDriverManager.edgedriver().setup();
+                EdgeOptions edgeOptions = new EdgeOptions();
+                if (headless) edgeOptions.addArguments("--headless=new");
+                return new EdgeDriver(edgeOptions);
+
+            default:
+                throw new IllegalArgumentException("Unsupported browser: " + browser);
+        }
+    }
+
+    private static WebDriver createRemoteDriver(String browser, boolean headless, String gridUrl) {
+        try {
+            switch (browser.toLowerCase()) {
+                case "chrome":
+                    ChromeOptions chromeOptions = new ChromeOptions();
+                    if (headless) chromeOptions.addArguments("--headless=new");
+                    return new RemoteWebDriver(new URL(gridUrl), chromeOptions);
+
+                case "firefox":
+                    FirefoxOptions ffOptions = new FirefoxOptions();
+                    if (headless) ffOptions.addArguments("-headless");
+                    return new RemoteWebDriver(new URL(gridUrl), ffOptions);
+
+                case "edge":
+                    EdgeOptions edgeOptions = new EdgeOptions();
+                    if (headless) edgeOptions.addArguments("--headless=new");
+                    return new RemoteWebDriver(new URL(gridUrl), edgeOptions);
+
+                default:
+                    throw new IllegalArgumentException("Unsupported browser: " + browser);
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Invalid Selenium Grid URL: " + gridUrl, e);
+        }
+    }
+
     private static WebDriver createDriver() {
         String browser = System.getProperty("browser", ConfigLoader.get("browser"));
         boolean headless = Boolean.parseBoolean(System.getProperty("headless", String.valueOf(ConfigLoader.getBoolean("headless"))));
-        switch (browser.toLowerCase()) {
-            case "chrome": {
-                WebDriverManager.chromedriver().setup();
-                ChromeOptions options = new ChromeOptions();
-                if (headless) {
-                    options.addArguments("--headless=new");
-                    options.addArguments("--no-sandbox");
-                    options.addArguments("--disable-dev-shm-usage");
-                    options.addArguments("--hide-scrollbars");
-                    options.addArguments("--disable-blink-features=AutomationControlled");
-                    options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36");
-                }
-                options.addArguments("--window-size=1920,1080");
-                options.addArguments("--disable-gpu");
-                options.addArguments("--force-device-scale-factor=1");
-                options.addArguments("--disable-features=VizDisplayCompositor");
-                options.addArguments("--remote-allow-origins=*");
-                options.addArguments("--disable-blink-features=AutomationControlled");
-                options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36");
-                String chromeBinary = System.getProperty("chromeBinary");
-                if (chromeBinary != null && !chromeBinary.isBlank()) {
-                    options.setBinary(chromeBinary);
-                }
-                return new ChromeDriver(options);
-            }
-            case "firefox": {
-                WebDriverManager.firefoxdriver().setup();
-                FirefoxOptions options = new FirefoxOptions();
-                if (headless)
-                    options.addArguments("-headless");
+        boolean useGrid = Boolean.parseBoolean(System.getProperty("selenium.grid", "false"));
+        String gridUrl = System.getProperty("selenium.grid.url", "http://localhost:4444/wd/hub");
 
-                    options.addArguments("--disable-blink-features=AutomationControlled");
-                    options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36");
-
-                String firefoxBinary = System.getProperty("firefoxBinary");
-                if (firefoxBinary != null && !firefoxBinary.isBlank()) {
-                    options.setBinary(firefoxBinary);
-                }
-                return new FirefoxDriver(options);
-            }
-            case "edge": {
-                WebDriverManager.edgedriver().setup();
-                EdgeOptions options = new EdgeOptions();
-                if (headless) {
-                    options.addArguments("--headless=new");
-                }
-                return new EdgeDriver(options);
-            }
-            default:
-                throw new IllegalArgumentException("Unsupported browser: " + browser);
+        if (useGrid) {
+            return createRemoteDriver(browser, headless, gridUrl);
+        } else {
+            return createLocalDriver(browser, headless);
         }
     }
 }

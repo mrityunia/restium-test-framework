@@ -2,14 +2,35 @@ FROM jenkins/inbound-agent:latest
 
 USER root
 
-# Install Maven, Git, Firefox, wget, unzip
+# Install Maven, Git, Firefox, wget, unzip, Docker CLI, and useful tools
 RUN apt-get update && apt-get install -y \
     maven \
     git \
     firefox-esr \
     wget \
     unzip \
+    curl \
+    vim \
+    less \
+    gnupg \
+    ca-certificates \
+    lsb-release \
     && rm -rf /var/lib/apt/lists/*
+
+# --- Install Docker CLI ---
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
+    apt-get update && apt-get install -y docker-ce-cli
+
+# --- Install Docker Compose plugin ---
+RUN mkdir -p /usr/local/lib/docker/cli-plugins && \
+    curl -SL https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose && \
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+# Enable color-capable terminal
+ENV TERM=xterm-256color
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 # Install Geckodriver for Firefox
 RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz \
@@ -18,7 +39,6 @@ RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckod
     && rm geckodriver-v0.34.0-linux64.tar.gz
 
 # --- 👇 Add GitHub host key configuration ---
-# Preconfigure SSH known_hosts so Jenkins agent can connect to GitHub safely
 RUN mkdir -p /home/jenkins/.ssh && \
     chmod 700 /home/jenkins/.ssh && \
     ssh-keyscan github.com >> /home/jenkins/.ssh/known_hosts 2>/dev/null && \
@@ -26,8 +46,15 @@ RUN mkdir -p /home/jenkins/.ssh && \
     chown -R jenkins:jenkins /home/jenkins/.ssh
 
 # Switch back to Jenkins user
-USER jenkins
+RUN apt-get update && \
+    apt-get install -y ca-certificates curl gnupg lsb-release && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+      $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y docker-ce-cli && \
+    rm -rf /var/lib/apt/lists/*
 
-# (Optional comment)
-# ✅ This ensures the Jenkins agent can clone private GitHub repos via SSH
-# without hitting "Known hosts file does not exist" or crumb verification errors.
+RUN apt-get update && apt-get install -y iputils-ping

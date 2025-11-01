@@ -1,23 +1,38 @@
-# Automation Framework (UI + API)
+Perfect 👍 — your current README is already excellent in terms of technical depth, but a few sections need **grammar, clarity, and structure improvements** (especially the Docker/Jenkins parts and small redundancies).
+Here’s a **cleaned, corrected, and more descriptive version** — fully polished and ready for GitHub or internal documentation use.
 
-Unified Java/Maven automation framework for end-to-end UI and API testing using Cucumber BDD with TestNG, Page Object Model, Selenium, RestAssured, Log4j2, and reporting. Tests are executed via Maven only (no TestNG XML).
+---
 
-## Tech Stack
-- Java 17, Maven
-- Cucumber BDD + TestNG
-- Selenium WebDriver (UI)
-- RestAssured (API)
-- Log4j2 (logging)
-- Cucumber JSON/HTML + aggregated HTML report
+# 🚀 Automation Framework (UI + API)
 
-## Project Structure
+A **unified Java/Maven automation framework** for **end-to-end UI and API testing**, built on **Cucumber BDD** with **TestNG**, the **Page Object Model (POM)** pattern, **Selenium**, **RestAssured**, and **Log4j2** logging.
+
+Tests are executed via **Maven** only (no TestNG XML required).
+The framework supports **parallel or sequential execution**, **Selenium Grid**, **headless mode**, and **Cucumber JSON/HTML reporting**.
+
+---
+
+## 🧠 Tech Stack
+
+* **Java 17**
+* **Maven 3.8+**
+* **Cucumber BDD + TestNG**
+* **Selenium WebDriver** (UI automation)
+* **RestAssured** (API testing)
+* **Log4j2** (logging)
+* **Cucumber JSON/HTML reports + Aggregated HTML dashboard**
+
+---
+
+## 📂 Project Structure
+
 ```
 automation-framework/
   pom.xml
   README.md
   src/test/resources/
     config.properties           # baseUrl, apiBaseUrl, browser, timeout, headless
-    log4j2.xml                  # logging config
+    log4j2.xml                  # logging configuration
     cucumber.properties         # cucumber defaults
     features/
       ui/
@@ -43,32 +58,60 @@ automation-framework/
       steps/api/APISteps.java
 ```
 
-## Prerequisites
-- JDK 17+
-- Maven 3.8+
-- Chrome/Firefox/Edge installed (choose with -Dbrowser)
+---
 
-## Configuration
-Edit `src/test/resources/config.properties` or override via system properties:
-- baseUrl (default: https://example.org)
-- apiBaseUrl (default: https://jsonplaceholder.typicode.com)
-- browser (chrome|firefox|edge)
-- headless (true|false)
-- timeoutSeconds (int)
+## ⚙️ Prerequisites
 
-Example overrides:
+* **JDK 17+**
+* **Maven 3.8+**
+* **Chrome**, **Firefox**, or **Edge** installed (selectable at runtime)
+
+---
+
+## ⚡ Configuration
+
+Update `src/test/resources/config.properties` or override using system properties:
+
+| Property         | Description           | Default                                |
+| ---------------- | --------------------- | -------------------------------------- |
+| `baseUrl`        | UI test base URL      | `https://example.org`                  |
+| `apiBaseUrl`     | API test base URL     | `https://jsonplaceholder.typicode.com` |
+| `browser`        | Target browser        | `chrome`                               |
+| `headless`       | Run without UI        | `true`                                 |
+| `timeoutSeconds` | Explicit wait timeout | `10`                                   |
+
+### Example overrides:
+
 ```bash
-mvn -f ./pom.xml test -Dbrowser=chrome -Dheadless=true -DbaseUrl=https://example.org -DapiBaseUrl=https://jsonplaceholder.typicode.com
+mvn clean test \
+  -Dbrowser=chrome \
+  -Dheadless=true \
+  -DbaseUrl=https://example.org \
+  -DapiBaseUrl=https://jsonplaceholder.typicode.com
 ```
 
-### UI browser parameterization
-- Choose browser at runtime with `-Dbrowser=chrome|firefox|edge` (falls back to `config.properties`).
-- Headless mode: `-Dheadless=true`.
-- Custom browser binary (optional):
-  - Chrome: `-DchromeBinary="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`
-  - Firefox: `-DfirefoxBinary="/Applications/Firefox.app/Contents/MacOS/firefox"`
+---
 
-Examples:
+## 🧭 Browser Configuration
+
+* Choose browser:
+  `-Dbrowser=chrome|firefox|edge`
+
+* Enable headless mode:
+  `-Dheadless=true`
+
+* Use custom browser binary (optional):
+
+```bash
+# Chrome example
+-DchromeBinary="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
+# Firefox example
+-DfirefoxBinary="/Applications/Firefox.app/Contents/MacOS/firefox"
+```
+
+### Examples:
+
 ```bash
 # Chrome headless
 mvn test -Psequential -Dbrowser=chrome -Dheadless=true
@@ -79,110 +122,229 @@ mvn test -Pparallel -DthreadCount=4 -Dbrowser=firefox -Dheadless=true
 # Edge UI tests
 mvn test -Psequential -Dbrowser=edge -Dcucumber.filter.tags="@ui"
 
-# Point to a custom Chrome binary
+# Custom Chrome binary
 mvn test -Psequential -Dbrowser=chrome -DchromeBinary="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 ```
 
-## Running Tests
-Always specify the execution mode (`-Psequential` or `-Pparallel`). If omitted, the framework defaults to sequential and echoes the active mode at build start.
+---
 
-- Sequential (default):
-```bash
-mvn -f ./pom.xml test -Psequential
-```
-- Parallel:
-```bash
-mvn -f ./pom.xml test -Pparallel -DthreadCount=4
-```
-- UI only / API only:
-```bash
-mvn -f ./pom.xml -Dtest=RunCucumberUITests test
-mvn -f ./pom.xml -Dtest=RunCucumberAPITests test
-```
-- Filter by tags (e.g., @Smoke):
-```bash
-mvn -f ./pom.xml test -Dcucumber.filter.tags="@Smoke"
-```
+## 🧪 Running Tests
 
-From inside the project directory (`automation-framework`), you can omit `-f ./pom.xml`:
+The framework supports two execution profiles:
+
+* **Sequential** – default mode
+* **Parallel** – multi-threaded execution
+
+Always specify the execution mode using Maven profiles:
+
 ```bash
 # Sequential (default)
 mvn test -Psequential
-# Parallel example (4 threads)
+
+# Parallel (4 threads)
 mvn test -Pparallel -DthreadCount=4
-# UI only / API only
+```
+
+### Targeted Runs
+
+* **UI only**
+
+```bash
 mvn -Dtest=RunCucumberUITests test
+```
+
+* **API only**
+
+```bash
 mvn -Dtest=RunCucumberAPITests test
-# Filter by tag
+```
+
+* **Filter by tags**
+
+```bash
 mvn test -Dcucumber.filter.tags="@Smoke"
 ```
 
-### Execution scenarios (tag-based filtering)
-- 3 API + 3 UI in parallel (together):
+---
+
+### 🧩 Tag-Based Execution Examples
+
+* Run both UI and API together (parallel):
+
 ```bash
-mvn test -Pparallel -DthreadCount=4 -Dcucumber.filter.tags="(@ui and @google and @Sanity) or (@api and @posts)" 
+mvn test -Pparallel -DthreadCount=4 \
+  -Dcucumber.filter.tags="(@ui and @google and @Sanity) or (@api and @posts)"
 ```
 
-- Only UI in parallel:
+* UI only in parallel:
+
 ```bash
-mvn test -Pparallel -DthreadCount=4 -Dtest=RunCucumberUITests -Dcucumber.filter.tags="@ui"
+mvn test -Pparallel -DthreadCount=4 \
+  -Dtest=RunCucumberUITests -Dcucumber.filter.tags="@ui"
 ```
 
-- Exactly 2 UI tests sequential (non-@Smoke Google scenarios):
+* Sequential run excluding `@Smoke`:
+
 ```bash
-mvn test -Psequential -Dtest=RunCucumberUITests -Dcucumber.filter.tags="@ui and @google and @Sanity and not @Smoke"
+mvn test -Psequential \
+  -Dtest=RunCucumberUITests \
+  -Dcucumber.filter.tags="@ui and @google and @Sanity and not @Smoke"
 ```
 
-## Tags
-- UI scenarios: `@ui`, `@google`, plus `@Smoke`/`@Sanity`.
-- API scenarios: `@api`, `@posts`, plus `@Smoke`/`@Sanity`.
+---
 
-## Reporting
-- Cucumber: `target/cucumber-reports/cucumber.json` and `cucumber.html`
-- Aggregated HTML: `target/cucumber-reports/cucumber-html-reports/` (generated in `verify` phase)
+## 🏷️ Tags
 
-Generate reports only (after tests ran):
+| Tag       | Scope        | Purpose                  |
+| --------- | ------------ | ------------------------ |
+| `@ui`     | UI features  | Marks UI feature files   |
+| `@google` | UI           | Specific Google tests    |
+| `@api`    | API features | Marks API feature files  |
+| `@posts`  | API          | JSONPlaceholder examples |
+| `@Smoke`  | General      | Lightweight sanity runs  |
+| `@Sanity` | General      | Stable regression set    |
+
+---
+
+## 📊 Reporting
+
+* **Cucumber JSON:** `target/cucumber-reports/cucumber.json`
+* **HTML Report:** `target/cucumber-reports/cucumber.html`
+* **Aggregated Dashboard:** `target/cucumber-reports/cucumber-html-reports/`
+
+Generate reports after tests:
+
 ```bash
-mvn -f ./pom.xml verify
+mvn verify
 ```
 
-## Screenshots on Failure
-- On scenario failure, a PNG is attached to the Cucumber report and saved to `target/screenshots/<scenario>_<timestamp>.png`.
-- Implemented via `Hooks.attachScreenshotOnFailure` and `ScreenshotUtil`.
+---
 
-## Design Notes
-- Page Object Model:
-  - `BasePage` provides waits/utilities; concrete pages extend it.
-  - `DriverManager` uses ThreadLocal to isolate browsers in parallel.
-- BDD Steps:
-  - UI steps interact with page objects only.
-  - API steps use RestAssured; base URI from `apiBaseUrl`.
-- No TestNG XML: Maven Surefire discovers TestNG+Cucumber runners.
+## 📸 Screenshots on Failure
 
-## Extending
-- Add a UI page: create `com.example.framework.pages.NewPage` extending `BasePage`.
-- Add UI steps: implement in `com.example.tests.steps.ui`.
-- Add API steps: implement in `com.example.tests.steps.api`.
-- Add features: create `.feature` files under `src/test/resources/features/ui|api` with `@Smoke`/`@Sanity` tags.
+* On failure, screenshots are automatically:
 
-## Useful URLs
-- JSONPlaceholder Posts API used in examples: `https://jsonplaceholder.typicode.com/posts`
+    * Saved under `target/screenshots/<scenario>_<timestamp>.png`
+    * Embedded into the Cucumber HTML report
+* Implemented via:
 
-## Troubleshooting
-- Browser not launching: ensure browser installed; consider `-Dheadless=true` in CI.
-- Parallel flakiness: increase `timeoutSeconds`, ensure stable locators.
-- Reports missing: ensure tests ran; then run `mvn verify` to regenerate aggregated report.
+    * `Hooks.attachScreenshotOnFailure`
+    * `ScreenshotUtil`
 
-## License
-This project is provided as-is for demonstration/testing purposes.
+---
 
-## docker sections 
+## 🧩 Design Overview
 
- - Docker compose up for jenkins service 
-`docker-compose -f docker-compose-jenkin.yml up`
- - Docker compose down to down the jenkins service
-`docker-compose -f docker-compose-jenkin.yml down -v`
+* **Page Object Model (POM):**
 
-## Docker install maven and other toolds run this which use the Docker.agent file and install all the toolds inside the docker
-`docker-compose -f docker-compose-jenkin.yml up -d --build`
+    * `BasePage` provides core wait & interaction utilities.
+    * Individual pages extend `BasePage`.
+
+* **Driver Management:**
+
+    * `DriverManager` uses `ThreadLocal<WebDriver>` for thread safety in parallel runs.
+
+* **Step Definitions:**
+
+    * `steps/ui` interacts only with Page Objects.
+    * `steps/api` uses RestAssured with `apiBaseUrl` as base URI.
+
+* **No TestNG XML:**
+
+    * Test discovery handled by Maven Surefire + TestNG + Cucumber.
+
+---
+
+## 🧱 Extending the Framework
+
+| Task             | How to Extend                                                                  |
+| ---------------- | ------------------------------------------------------------------------------ |
+| Add a new page   | Create `NewPage.java` under `com.example.framework.pages` extending `BasePage` |
+| Add UI steps     | Implement in `com.example.tests.steps.ui`                                      |
+| Add API steps    | Implement in `com.example.tests.steps.api`                                     |
+| Add new features | Create `.feature` files under `src/test/resources/features/ui` or `api`        |
+
+---
+
+## 🌍 Example API Used
+
+* **JSONPlaceholder API (Demo Source):**
+  [https://jsonplaceholder.typicode.com/posts](https://jsonplaceholder.typicode.com/posts)
+
+---
+
+## 🧰 Troubleshooting
+
+| Issue                   | Possible Fix                                      |
+| ----------------------- | ------------------------------------------------- |
+| Browser not launching   | Ensure browser installed or use `-Dheadless=true` |
+| Parallel instability    | Increase `timeoutSeconds`, stabilize locators     |
+| Missing reports         | Ensure tests ran, then execute `mvn verify`       |
+| Grid connection failure | Verify Docker network and Selenium Grid status    |
+
+---
+
+## 🐳 Docker & Jenkins Integration
+
+### 🧩 Jenkins Service (Dockerized)
+
+**Start Jenkins:**
+
+```bash
+docker compose -f docker-compose-jenkin.yml up -d --build
+```
+
+**Stop Jenkins:**
+
+```bash
+docker compose -f docker-compose-jenkin.yml down -v
+```
+
+This setup automatically provisions:
+
+* Jenkins master node
+* Maven, Java, and Git preinstalled
+* Shared Docker socket for running containerized builds
+
+---
+
+### 🌐 Selenium Grid (Dockerized)
+
+**Start Grid:**
+
+```bash
+docker compose -f docker-compose.selenium-grid.yml up -d
+```
+
+**Stop Grid:**
+
+```bash
+docker compose -f docker-compose.selenium-grid.yml down -v
+```
+
+**Access Selenium Grid UI:**
+👉 [http://localhost:4444/ui](http://localhost:4444/ui)
+
+---
+
+### 🧭 Local Test Execution via Grid
+
+Run tests against your **local Selenium Grid**:
+
+```bash
+mvn clean test \
+  -Pparallel \
+  -Dmode=parallel \
+  -Dthreads=4 \
+  -Dselenium.grid=true \
+  -Dbrowser=firefox
+```
+
+---
+
+## ⚖️ License
+
+This project is provided **as-is** for demonstration and educational purposes.
+
+---
 
